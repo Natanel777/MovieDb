@@ -1,6 +1,7 @@
+package natanel.android.moviedb.utils
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import natanel.android.moviedb.utils.ResultWrapper
 import retrofit2.HttpException
 import java.io.IOException
 

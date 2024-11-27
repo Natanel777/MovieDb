@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import natanel.android.moviedb.data.database.MovieEntity
 import natanel.android.moviedb.data.service.model.movie_details.MovieDetailsResponse
 import natanel.android.moviedb.data.service.model.movie_list.Movie
+import natanel.android.moviedb.data.service.model.player.Video
 import natanel.android.moviedb.utils.ResultWrapper
 
 interface MovieRepository {
@@ -23,4 +24,6 @@ interface MovieRepository {
     suspend fun deleteFavoriteMovie(movieEntity: MovieEntity)
 
     fun getAllFavoriteMovies(): Flow<List<MovieEntity>> // Gets it already as a flow from Room
+
+    suspend fun getMovieVideo(movieId: Int): Flow<ResultWrapper<List<Video>>>
 }

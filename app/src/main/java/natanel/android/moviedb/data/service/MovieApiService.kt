@@ -1,9 +1,9 @@
 package natanel.android.moviedb.data.service
 
 import natanel.android.moviedb.data.service.model.movie_details.MovieDetailsResponse
-import natanel.android.moviedb.data.service.model.movie_list.Movie
 import natanel.android.moviedb.data.service.model.movie_list.now_playing.NowPlayingMovieResponse
 import natanel.android.moviedb.data.service.model.movie_list.popular.PopularMovieResponse
+import natanel.android.moviedb.data.service.model.player.GetVideosResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -27,6 +27,12 @@ interface MovieApiService {
     suspend fun getMovieDetails(
         @Path("movie_id") movieId: Int
     ): MovieDetailsResponse
+
+    @GET("movie/{movieId}/videos")
+    suspend fun getVideos(
+        @Path("movieId") movieId: Int,
+        @Query("language") language: String? = "en-US"
+    ): GetVideosResponse
 
 }
 

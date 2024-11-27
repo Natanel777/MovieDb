@@ -21,9 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +47,7 @@ import natanel.android.moviedb.ui.theme.MovieDbBlack
 import natanel.android.moviedb.ui.theme.MovieDbGold
 import natanel.android.moviedb.ui.theme.MovieDbGray
 import natanel.android.moviedb.ui.theme.MovieDbTheme
+import natanel.android.moviedb.utils.ObserveAsEvent
 import natanel.android.moviedb.utils.getPopularityColor
 import natanel.android.moviedb.utils.mapPopularityToCategory
 
@@ -59,13 +58,10 @@ fun MovieListScreenRoot(
 ) {
 
     val context = LocalContext.current
-    val error by viewModel.errorMessage.collectAsState()
 
     // Show a toast when there's an error
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        }
+    ObserveAsEvent(viewModel.errorMessage) { error ->
+        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
     }
 
     MovieListScreen(
@@ -217,10 +213,10 @@ private fun FilterTabs(
 
                     .clickable { onCategorySelected(category) }
                     .padding(8.dp),
-        textAlign = TextAlign.Center
-        )
+                textAlign = TextAlign.Center
+            )
+        }
     }
-}
 }
 
 @Composable

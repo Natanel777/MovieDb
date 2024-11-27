@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import natanel.android.moviedb.presentation.movie_details.MovieDetailsScreenRoot
 import natanel.android.moviedb.presentation.movie_list.MovieListScreenRoot
+import natanel.android.moviedb.presentation.movie_details.YoutubePlayerScreen
 
 @Composable
 fun Navigation() {
@@ -35,5 +36,14 @@ fun Navigation() {
                 )
             }
         }
+
+        composable(
+            route = "youtubePlayerScreen/{youtubeCode}",
+            arguments = listOf(navArgument("youtubeCode") { type = NavType.StringType })
+        ) {
+            val youtubeCode = it.arguments?.getString("youtubeCode") ?: ""
+            YoutubePlayerScreen(youtubeCode = youtubeCode)
+        }
+
     }
 }

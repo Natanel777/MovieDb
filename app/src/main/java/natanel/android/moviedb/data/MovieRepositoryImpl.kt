@@ -8,8 +8,9 @@ import natanel.android.moviedb.domain.MovieRepository
 import natanel.android.moviedb.data.service.MovieApiService
 import natanel.android.moviedb.data.service.model.movie_details.MovieDetailsResponse
 import natanel.android.moviedb.data.service.model.movie_list.Movie
+import natanel.android.moviedb.data.service.model.player.Video
 import natanel.android.moviedb.utils.ResultWrapper
-import safeApiCall
+import natanel.android.moviedb.utils.safeApiCall
 import javax.inject.Inject
 
 class MovieRepositoryImpl @Inject constructor(
@@ -49,4 +50,12 @@ class MovieRepositoryImpl @Inject constructor(
     override fun getAllFavoriteMovies(): Flow<List<MovieEntity>> {
         return movieDao.getFavoriteMovies()
     }
+
+    override suspend fun getMovieVideo(movieId: Int): Flow<ResultWrapper<List<Video>>> {
+        return flow {
+            emit(ResultWrapper.Loading(true))
+            emit(safeApiCall { apiService.getVideos(movieId).results.filter { it.site == "YouTube" } })
+        }
+    }
+
 }

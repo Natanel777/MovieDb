@@ -101,4 +101,7 @@ dependencies {
     // Pager
     implementation(libs.accompanist.pager)
 
+    // Youtube Player
+    implementation(libs.core)
+
 }

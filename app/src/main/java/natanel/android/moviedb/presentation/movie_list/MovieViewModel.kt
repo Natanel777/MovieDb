@@ -4,9 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import natanel.android.moviedb.data.database.mapToMovie
@@ -22,8 +24,8 @@ class MovieViewModel @Inject constructor(
     private var _movieListState = MutableStateFlow(MovieListState())
     val movieListState = _movieListState.asStateFlow()
 
-    private var _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage = _errorMessage.asStateFlow()
+    private var _errorMessage = Channel<String?>()
+    val errorMessage = _errorMessage.receiveAsFlow()
 
     // Prevent duplicate calls
     private var isFetchingPopular = false
@@ -180,7 +182,7 @@ class MovieViewModel @Inject constructor(
         }
     }
 
-    private fun postError(message: String) {
-        _errorMessage.value = message
+    private suspend fun postError(message: String) {
+        _errorMessage.send(message)
     }
 }

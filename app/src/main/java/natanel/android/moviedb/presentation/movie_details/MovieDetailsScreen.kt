@@ -3,6 +3,7 @@ package natanel.android.moviedb.presentation.movie_details
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +59,9 @@ import natanel.android.moviedb.data.service.model.movie_details.MovieDetailsResp
 import natanel.android.moviedb.data.service.model.movie_details.ProductionCompany
 import natanel.android.moviedb.data.service.model.movie_details.ProductionCountry
 import natanel.android.moviedb.data.service.model.movie_details.SpokenLanguage
+import natanel.android.moviedb.data.service.model.player.Video
 import natanel.android.moviedb.ui.theme.MovieDbTheme
+import natanel.android.moviedb.utils.ObserveAsEvent
 import natanel.android.moviedb.utils.RatingBar
 
 @Composable
@@ -64,28 +71,28 @@ fun MovieDetailsScreenRoot(
     viewModel: MovieDetailsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val error by viewModel.errorMessage.collectAsState()
     val movieDetails by viewModel.movieDetailsState.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
+    val videoState by viewModel.videoState.collectAsState()
 
     LaunchedEffect(id) {
         viewModel.fetchMovieDetails(id)
     }
 
     // Show a toast when there's an error
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        }
+    ObserveAsEvent(viewModel.errorMessage) { error ->
+        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
     }
+
 
     movieDetails?.let {
         MovieDetailsScreen(
-        state = it,
-        isFavorite = isFavorite,
-        onToggleFavorite = { viewModel.toggleFavorite(it) },
-        onBack = { navController.popBackStack() }
-    )
+            state = it,
+            isFavorite = isFavorite,
+            onToggleFavorite = { viewModel.toggleFavorite(it) },
+            onBack = { navController.popBackStack() },
+            videoState = videoState
+        )
     }
 }
 
@@ -94,8 +101,11 @@ private fun MovieDetailsScreen(
     state: MovieDetailsResponse,
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    videoState: Video?
 ) {
+
+    var showYouTubeVideo by rememberSaveable { mutableStateOf(false) }
 
     GradientBackground {
         Scaffold(
@@ -103,23 +113,68 @@ private fun MovieDetailsScreen(
             containerColor = Color.Transparent
         ) { innerPadding ->
 
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-                    // Backdrop Image
-                    Image(
-                        painter = rememberAsyncImagePainter(BuildConfig.IMAGE_BASE_URL + state.backdropPath),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        contentScale = ContentScale.Crop
-                    )
+
+                    Box {
+                        // Backdrop Image
+                        Image(
+                            painter = rememberAsyncImagePainter(BuildConfig.IMAGE_BASE_URL + state.backdropPath),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(MaterialTheme.shapes.medium),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        // Back Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = onBack,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            // Favorite Icon
+                            IconButton(
+                                onClick = onToggleFavorite,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(36.dp)
+
+                                    .aspectRatio(1f)
+                                    .align(Alignment.CenterVertically)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_favorite),
+                                    contentDescription = "Favorite",
+                                    colorFilter = ColorFilter.tint(if (isFavorite) Color.Red else Color.Gray),
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -198,7 +253,6 @@ private fun MovieDetailsScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
 
-
                     // Overview
                     state.overview?.let {
                         Text(
@@ -209,43 +263,35 @@ private fun MovieDetailsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                }
 
-                // Back Button
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Favorite Icon
-                    IconButton(
-                        onClick = onToggleFavorite,
-                        modifier = Modifier
-                            .size(44.dp)
-                            .aspectRatio(1f)
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_favorite),
-                            contentDescription = "Favorite",
-                            colorFilter = ColorFilter.tint(if (isFavorite) Color.Red else Color.Gray),
-                            modifier = Modifier.fillMaxSize()
+                    // YouTube Video Section
+                    if (videoState != null) {
+                        if (!showYouTubeVideo) {
+                            Button(
+                                onClick = { showYouTubeVideo = true },
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(top = 16.dp)
+                            ) {
+                                Text(text = "Watch YouTube Video", color = Color.White)
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .background(Color.Black)
+                            ) {
+                                YoutubePlayerScreen(videoState.key) // Use videoState key dynamically
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No video available",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }
                 }
@@ -253,6 +299,7 @@ private fun MovieDetailsScreen(
         }
     }
 }
+
 
 @Composable
 fun GenreCard(genre: String) {
@@ -279,6 +326,7 @@ private fun MovieDetailsScreenPreview() {
             isFavorite = false,
             onToggleFavorite = {},
             onBack = {},
+            videoState = null,
             state = MovieDetailsResponse(
                 adult = false,
                 backdropPath = "/3V4kLQg0kSqPLctI5ziYWabAZYF.jpg",
