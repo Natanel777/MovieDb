@@ -18,7 +18,7 @@ android {
 
         val properties = Properties()
         properties.load(project.rootProject.file("local.properties").inputStream())
-        val apiKey = properties.getProperty("TMDB_API_KEY") ?: "\"\"" // Default to an empty string if not found
+        val apiKey = properties.getProperty("TMDB_API_KEY")
         buildConfigField("String", "TMDB_API_KEY", "\"$apiKey\"")
         buildConfigField("String", "BASE_URL", "\"https://api.themoviedb.org/3/\"")
         buildConfigField("String", "IMAGE_BASE_URL", "\"https://image.tmdb.org/t/p/w500\"")

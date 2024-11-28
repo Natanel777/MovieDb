@@ -66,6 +66,8 @@ The Movie App allows users to browse movies, view details, and watch the latest 
 ![Tablet2](screenshots/screenshot_tablet2.png)
 ## Usage
 
+Required: **Android Gradle Plugin (AGP) 8.9**
+
 **Before Running The App**:
 
 - 1 . Go to https://www.themoviedb.org
